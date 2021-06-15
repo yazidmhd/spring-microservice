@@ -1,0 +1,16 @@
+server:
+  port: 9296
+
+#config server configuration
+#uri - link to github where the common configurations will be stored so there will be no duplication
+#all other services will need to talk to this config server
+#enable config client over on the services and point it to this url
+spring:
+  application:
+    name: CONFIG-SERVER
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/yazidmhd/config-server
+          clone-on-start: true

@@ -1,0 +1,51 @@
+server:
+  port: 9191
+
+#spring cloud gateway - for route configuration
+#different routes that are available in the Service Registry
+#predicates - the different url patterns that it has (PathVariable, RequestParams)
+#e.g. anything that starts with the /users and ends with anything will be redirected to the USER-SERVICE (/**)
+#uri - lb://USER-SERVICE = lb is load balance, USER-SERVICE is the service name
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: USER-SERVICE
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/users/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: USER-SERVICE
+                fallbackuri: forward:/userServiceFallBack
+        - id: DEPARTMENT-SERVICE
+          uri: lb://DEPARTMENT-SERVICE
+          predicates:
+            - Path=/departments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: DEPARTMENT-SERVICE
+                fallbackuri: forward:/departmentServiceFallBack
+
+#hystrix configuration
+#timeout in 4secs, so if no response from either service in 4 secs, request will be forwarded to the fallbackuri
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 4000
+
+#actuators configuration
+#hystrix.stream = manipulating hystrix.stream so you can use the information in the hystrix dashboard
+#hence enabling it in CloudGatewayApplication
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream
